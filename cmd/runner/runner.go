@@ -32,6 +32,7 @@ func main() {
 		serverName           = flag.String("server", "", "")
 		testcaseName         = flag.String("testcase", "", "")
 		buildEndpoints       = flag.Bool("build", false, "")
+		buildCmd             = flag.String("buildcmd", "", "")
 		runAllTests          = flag.Bool("alltestcases", false, "")
 		listInteropClients   = flag.Bool("list-interop-clients", false, "")
 		listInteropServers   = flag.Bool("list-interop-servers", false, "")
@@ -89,7 +90,7 @@ func main() {
 
 		if *runAllTests {
 			if *buildEndpoints {
-				err := doBuildEndpoints(client, server, *verbose)
+				err := doBuildEndpoints(client, server, *verbose, *buildCmd)
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(1)
@@ -105,7 +106,7 @@ func main() {
 		} else if *testcaseName != "" {
 			if t, ok := testcases[*testcaseName]; ok {
 				if *buildEndpoints {
-					err := doBuildEndpoints(client, server, *verbose)
+					err := doBuildEndpoints(client, server, *verbose, *buildCmd)
 					if err != nil {
 						log.Printf("ERROR: %s", err.Error())
 						os.Exit(1)
@@ -126,10 +127,16 @@ func main() {
 	}
 }
 
-func doBuildEndpoints(client endpoint, server endpoint, verbose bool) error {
+func doBuildEndpoints(client endpoint, server endpoint, verbose bool, buildCmd string) error {
 	log.Printf("Building %s client and %s server.\n", client.name, server.name)
 
-	cmd := exec.Command("docker-compose", "build")
+    var cmd *exec.Cmd
+    if buildCmd == "" {
+        cmd = exec.Command("docker-compose", "build")
+    } else {
+        cmd = exec.Command("/bin/sh", "-c", buildCmd)
+    }
+
 	env := os.Environ()
 	if client.regression {
 		env = append(env, "CLIENT_SRC=regression-endpoints")
@@ -153,7 +160,7 @@ func doBuildEndpoints(client endpoint, server endpoint, verbose bool) error {
 	}
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("docker-compose build: %s", err)
+		return fmt.Errorf("doBuildEndpoints build failure: %s", err)
 	}
 
 	log.Printf("Building done.\n")
