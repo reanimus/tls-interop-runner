@@ -6,7 +6,6 @@ version: "2.4"
 services:
   network:
     image: tls-interop-network
-    build: ./network
     container_name: network
     hostname: network
     stdin_open: true
@@ -27,7 +26,6 @@ services:
 
   server:
     image: tls-endpoint-${SERVER}
-    build: ${SERVER_SRC}/${SERVER}
     container_name: server
     hostname: server
     stdin_open: true
@@ -54,7 +52,6 @@ services:
 
   client:
     image: tls-endpoint-${CLIENT}
-    build: ${CLIENT_SRC}/${CLIENT}
     container_name: client
     hostname: client
     stdin_open: true
